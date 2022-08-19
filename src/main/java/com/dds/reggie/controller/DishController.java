@@ -11,10 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -25,15 +27,19 @@ public class DishController {
     DishService dishService;
     @Autowired
     CategoryService categoryService;
+    @Autowired
+    RedisTemplate redisTemplate;
 
-    //保存菜品及其菜品口味信息
+
+    //新增菜品及其菜品口味信息
     @PostMapping
     public R<String> save(@RequestBody DishDto dishDto){
-
-        log.info("dishDto : {}",dishDto);
-
-
+        //优化：菜品及其菜品口味信息后需要清理当前缓存数据，保证数据一致性
         dishService.save(dishDto);
+
+        //这里选择清理指定key的数据，也可以清理所有缓存数据，看需求编写
+        String key = "dish_" + dishDto.getCategoryId() + "_1";
+        redisTemplate.delete(key);
 
         return R.success("新增菜品成功！");
 
@@ -84,27 +90,50 @@ public class DishController {
     public R<String> updateDishAndFlavors(@RequestBody DishDto dishDto){
 
         dishService.updateDishAndFlavors(dishDto);
+
+        //优化：修改菜品及其菜品口味信息后需要清理当前缓存数据，保证数据一致性
+        String key = "dish_" + dishDto.getCategoryId() + "_1";
+        redisTemplate.delete(key);
+
         return R.success("修改菜品成功！");
 
     }
     //根据菜品分类id获取全部菜品
     @GetMapping("/list")
     public R<List<DishDto>> getByCategoryId(Dish dish){
-        QueryWrapper<Dish> qw = new QueryWrapper<>();
-        qw.eq("category_id",dish.getCategoryId());
-        qw.orderByDesc("update_time").orderByAsc("sort");
-        qw.eq("status",1);
 
-        List<Dish> dishes = dishService.getDishByCategoryId(qw);
+        //优化：确认是进行缓存
+        //确认要查询的数据在redis中的key值
+        String key = "dish_" + dish.getCategoryId() + "_" + dish.getStatus();
+        List<DishDto> dishDtos = (List<DishDto>)redisTemplate.opsForValue().get(key);
+        //如果缓存存在数据直接返回缓存数据
+        if(dishDtos != null){
+            return R.success(dishDtos);
+        }
+
+
+        //如果缓存中无数据则查询mysql数据库并将数据存入redis中
+        List<Dish> dishes = dishService.getDishByCategoryId(dish);
         //重新封装为有额外信息的对象（比如口味，菜品分类名称）返还给客户端
-        List<DishDto> dishDtos = new ArrayList<>();
-
+        dishDtos = new ArrayList<>();
         for(Dish tmpDish:dishes){
             DishDto tmpDishDto = dishService.getDishAndFlavorsById(tmpDish.getId());
             dishDtos.add(tmpDishDto);
         }
+        redisTemplate.opsForValue().set(key,dishDtos,60, TimeUnit.MINUTES);
+
 
         return R.success(dishDtos);
     }
+
+
+
+
+
+
+
+
+
+
 
 }

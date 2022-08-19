@@ -27,5 +27,5 @@ public interface DishService {
     public void updateDishAndFlavors(DishDto dishDto);
 
     //根据菜品分类id查询所有菜品信息
-    public List<Dish> getDishByCategoryId(QueryWrapper<Dish> qw);
+    public List<Dish> getDishByCategoryId(Dish dish);
 }

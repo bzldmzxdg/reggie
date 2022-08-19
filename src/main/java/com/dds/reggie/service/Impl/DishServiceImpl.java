@@ -98,7 +98,11 @@ public class DishServiceImpl implements DishService {
     }
 
     @Override
-    public List<Dish> getDishByCategoryId(QueryWrapper<Dish> qw) {
+    public List<Dish> getDishByCategoryId(Dish dish) {
+        QueryWrapper<Dish> qw = new QueryWrapper<>();
+        qw.eq("category_id",dish.getCategoryId());
+        qw.orderByDesc("update_time").orderByAsc("sort");
+        qw.eq("status",1);
         return dishMapper.selectList(qw);
     }
 }
