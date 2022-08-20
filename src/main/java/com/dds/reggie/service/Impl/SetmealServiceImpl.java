@@ -12,6 +12,8 @@ import com.dds.reggie.mapper.SetmealMapper;
 import com.dds.reggie.service.SetmealDishService;
 import com.dds.reggie.service.SetmealService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -89,6 +91,9 @@ public class SetmealServiceImpl implements SetmealService {
 
 
     @Override
+    //spring cache ：@Cacheable作用，如果缓存有数据则直接走缓存，该方法不会执行；
+    //否则执行完方法后，将方法返回值存入缓存（redis）,注意方法返回值类型必须可序列化
+    @Cacheable(value = "setmeal",key = "#setmeal.getCategoryId() + '_' + #setmeal.getStatus()")
     public List<Setmeal> getAllByCategoryId(Setmeal setmeal) {
         QueryWrapper<Setmeal> qw = new QueryWrapper<>();
         qw.eq("category_id",setmeal.getCategoryId());

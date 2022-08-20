@@ -102,6 +102,8 @@ public class DishController {
     @GetMapping("/list")
     public R<List<DishDto>> getByCategoryId(Dish dish){
 
+        dish.setStatus(1);//这里必定是查询正在起售的菜品，防止前端请求地址漏掉
+
         //优化：确认是进行缓存
         //确认要查询的数据在redis中的key值
         String key = "dish_" + dish.getCategoryId() + "_" + dish.getStatus();

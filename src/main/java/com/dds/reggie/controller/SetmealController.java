@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -34,6 +35,8 @@ public class SetmealController {
 
     //保存套餐及其套餐内菜品信息
     @PostMapping
+    //spring cache : @CacheEvict注解作用删除缓存中的数据
+    @CacheEvict(value = "setmeal",allEntries = true)//删除类别为setmeal下的所有key
     public R<String> save(@RequestBody SetmealDto setmealDto){
 
         //保存套餐信息
