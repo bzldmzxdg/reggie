@@ -11,7 +11,9 @@ class test {
     public void test1(){
 
         String str = null;
-        System.out.println("1" + null);
+        String str1 = "dds" + str;
+        System.out.println(str1.equals("ddsnull"));
+        System.out.println(str1);
 
 
 
