@@ -52,23 +52,23 @@ public class CategoryController {
 
     //删除指定菜品/套餐分类
     @DeleteMapping
-    public R<String> delete(Long ids){
+    public R<String> delete(Long id){
 
 
         //调用Service层执行根据id删除指定菜品/套餐分类的方法
-        Long count1 = dishService.selectCountByCategoryId(ids);
+        Long count1 = dishService.selectCountByCategoryId(id);
         if(count1 > 0){
             throw new MyRuntimeException("当前分类已有菜品，不能删除！");
         }
 
-        Long count2 = setmealService.selectCountByCategoryId(ids);
+        Long count2 = setmealService.selectCountByCategoryId(id);
 
 
         if(count2 > 0){
             throw new MyRuntimeException("当前分类已有套餐，不能删除！");
         }
 
-        categoryService.delete(ids);
+        categoryService.delete(id);
         return R.success("删除成功！");
     }
 

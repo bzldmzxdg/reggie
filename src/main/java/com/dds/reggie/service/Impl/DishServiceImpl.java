@@ -105,4 +105,12 @@ public class DishServiceImpl implements DishService {
         qw.eq("status",1);
         return dishMapper.selectList(qw);
     }
+
+    @Override
+    public Integer updateStatus(Integer statusCode, Long id) {
+        Dish dish = new Dish();
+        dish.setStatus(statusCode);
+        dish.setId(id);
+        return dishMapper.updateById(dish);
+    }
 }

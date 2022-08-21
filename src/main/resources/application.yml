@@ -63,4 +63,4 @@ mybatis-plus:
       id-type: ASSIGN_ID
 
 reggie:
-  path: D:\reggie_images\
+  path: D:\reggie_images\  #菜品图片路径

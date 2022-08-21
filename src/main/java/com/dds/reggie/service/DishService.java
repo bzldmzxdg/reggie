@@ -28,4 +28,7 @@ public interface DishService {
 
     //根据菜品分类id查询所有菜品信息
     public List<Dish> getDishByCategoryId(Dish dish);
+
+    //根据菜品id修改售卖状态
+    public Integer updateStatus(Integer statusCode,Long id);
 }

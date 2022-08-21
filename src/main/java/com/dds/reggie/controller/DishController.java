@@ -128,6 +128,12 @@ public class DishController {
         return R.success(dishDtos);
     }
 
+    //修改菜品售卖状态
+    @PostMapping("/status/{code}")
+    public R<String> updateStatus(@PathVariable("code") Integer statusCode,Long ids){
+        dishService.updateStatus(statusCode,ids);
+        return R.success("修改成功！");
+    }
 
 
 
