@@ -7,6 +7,8 @@ import com.dds.reggie.service.OrdersDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class OrdersDetailServiceImpl implements OrdersDetailService {
 
@@ -16,5 +18,12 @@ public class OrdersDetailServiceImpl implements OrdersDetailService {
     @Override
     public Integer save(OrderDetail orderDetail) {
         return orderDetailsMapper.insert(orderDetail);
+    }
+
+    @Override
+    public List<OrderDetail> getByOrderId(Long orderId) {
+        QueryWrapper<OrderDetail> qw = new QueryWrapper<>();
+        qw.eq("order_id",orderId);
+        return orderDetailsMapper.selectList(qw);
     }
 }

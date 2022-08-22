@@ -50,7 +50,7 @@ public class UserController {
         return R.success("短信发送成功！");
     }
 
-    //登录
+    //用户登录
     @PostMapping("/login")
     public R<String> login(@RequestBody Map<Object,Object> map,HttpServletRequest request){
         String phone = (String) map.get("phone");
@@ -69,6 +69,7 @@ public class UserController {
                 //新用户保存
                 User user = new User();
                 user.setPhone(phone);
+                user.setName("新用户的名字一律为丁东升");
                 userService.save(user);
                 userId = user.getId();
             }else{
@@ -85,4 +86,13 @@ public class UserController {
         }
         return R.error("登录失败");
     }
+
+
+    //用户注销
+    @PostMapping("/loginout")
+    public R<String> logout(HttpServletRequest request){
+        request.getSession().removeAttribute("user");
+        return R.success("退出登录成功!");
+    }
+
 }

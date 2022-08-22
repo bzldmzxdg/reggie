@@ -14,6 +14,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ public class SetmealController {
     @Autowired
     CategoryService categoryService;
 
-    //保存套餐及其套餐内菜品信息
+    //新增套餐及其套餐内菜品信息
     @PostMapping
     //spring cache : @CacheEvict注解作用删除缓存中的数据
     @CacheEvict(value = "setmeal",allEntries = true)//删除类别为setmeal下的所有key
@@ -77,7 +78,7 @@ public class SetmealController {
         return R.success(page1);
     }
 
-    //根据套餐id删除套餐信息
+    //根据套餐id删除套餐及其套餐内菜品信息（不会影响购物车和订单信息）
     @DeleteMapping
     public R<String> delete(@RequestParam List<Long> ids){
         setmealService.delete(ids);
@@ -89,5 +90,38 @@ public class SetmealController {
     public R<List<Setmeal>> list(Setmeal setmeal){
         List<Setmeal> setMealList = setmealService.getAllByCategoryId(setmeal);
         return R.success(setMealList);
+    }
+
+    //根据套餐id修改套餐售卖状态（不会影响购物车和订单信息）
+    @PostMapping("/status/{code}")
+    @Transactional
+    public R<String> updateStatus(@PathVariable("code") Integer statusCode,@RequestParam List<Long> ids){
+
+        setmealService.updateStatus(statusCode,ids);
+
+        return R.success("修改成功！");
+    }
+
+    //根据套餐id返回套餐及其套餐内菜品信息
+    @GetMapping("/{id}")
+    public R<SetmealDto> getById(@PathVariable("id") Long id){
+        SetmealDto setmealDto = setmealService.getById(id);
+        return R.success(setmealDto);
+    }
+
+    //修改套餐及其套餐内菜品信息
+    @PutMapping
+    public R<String> update(@RequestBody SetmealDto setmealDto){
+        setmealService.update(setmealDto);
+        return R.success("修改成功！");
+    }
+
+    //客户端根据套餐id回显套餐信息
+    @GetMapping("/dish/{id}")
+    public R<List<SetmealDish>> getDishes(@PathVariable("id") Long id){
+        SetmealDto dishes = setmealService.getById(id);
+        List<SetmealDish> list = dishes.getSetmealDishes();
+        return R.success(list);
+
     }
 }

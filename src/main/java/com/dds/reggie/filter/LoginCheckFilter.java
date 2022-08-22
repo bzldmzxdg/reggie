@@ -34,7 +34,8 @@ public class LoginCheckFilter implements Filter {
                 "/backend/**",
                 "/front/**",
                 "/user/sendMsg",//移动端发送短信
-                "/user/login"   //移动端登录
+                "/user/login", //移动端登录
+                "/user/loginout" //移动端注销
         };
 
         Boolean check = pathMatcher(urls, requestURI);

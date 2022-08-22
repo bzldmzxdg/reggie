@@ -4,14 +4,13 @@ package com.dds.reggie.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dds.reggie.entity.*;
-import com.dds.reggie.service.CategoryService;
-import com.dds.reggie.service.DishFlavorService;
-import com.dds.reggie.service.DishService;
+import com.dds.reggie.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -29,6 +28,8 @@ public class DishController {
     CategoryService categoryService;
     @Autowired
     RedisTemplate redisTemplate;
+    @Autowired
+    SetmealDishService setmealDishService;
 
 
     //新增菜品及其菜品口味信息
@@ -128,18 +129,41 @@ public class DishController {
         return R.success(dishDtos);
     }
 
-    //修改菜品售卖状态
+    //修改菜品售卖状态（不会影响购物车和订单信息）
     @PostMapping("/status/{code}")
-    public R<String> updateStatus(@PathVariable("code") Integer statusCode,Long ids){
-        dishService.updateStatus(statusCode,ids);
+    @Transactional
+    public R<String> updateStatus(@PathVariable("code") Integer statusCode,@RequestParam List<Long> ids){
+
+        if(statusCode == 0){
+            setmealDishService.deleteDishByDishId(ids);
+            dishService.updateStatus(statusCode,ids);
+        }else{
+            dishService.updateStatus(statusCode,ids);
+        }
+
         return R.success("修改成功！");
     }
 
+    //删除菜品（不会影响购物车和订单信息）
+    @Transactional
+    @DeleteMapping
+    public R<String> deleteDish(@RequestParam List<Long> ids){
+
+        //查询选中的菜品售卖状态，如果存在菜品正在启售则报错
+        DishDto curDish = null;
+        for(Long id:ids){
+            curDish = dishService.getDishAndFlavorsById(id);
+            if(curDish.getStatus()!=0){
+                return R.error("删除失败，丁东升：存在菜品正在启售，请先停售！");
+            }
+        }
 
 
+        //否则删除该菜品及其口味信息
+        dishService.deleteDishAndFlavorsById(ids);
 
-
-
+        return R.success("删除菜品成功！");
+    }
 
 
 

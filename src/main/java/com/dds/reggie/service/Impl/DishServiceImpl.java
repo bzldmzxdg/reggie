@@ -89,10 +89,12 @@ public class DishServiceImpl implements DishService {
 
 
         //1.根据菜品id删除口味信息
-        dishFlavorService.deleteByDishId(dishDto.getId());
+        Long dishId = dishDto.getId();
+        dishFlavorService.deleteByDishId(dishId);
         //2.插入新的口味信息
         List<DishFlavor> flavors = dishDto.getFlavors();
         for(DishFlavor flavor : flavors){
+            flavor.setDishId(dishId);
             dishFlavorService.save(flavor);
         }
     }
@@ -107,10 +109,27 @@ public class DishServiceImpl implements DishService {
     }
 
     @Override
-    public Integer updateStatus(Integer statusCode, Long id) {
+    public Integer updateStatus(Integer statusCode, List<Long> dishIds) {
         Dish dish = new Dish();
-        dish.setStatus(statusCode);
-        dish.setId(id);
-        return dishMapper.updateById(dish);
+        for(Long dishId:dishIds){
+            dish.setStatus(statusCode);
+            dish.setId(dishId);
+            dishMapper.updateById(dish);
+        }
+
+        return 1;
+    }
+
+    @Override
+    public Integer deleteDishAndFlavorsById(List<Long> dishIds) {
+
+        for(Long dishId:dishIds){
+            //根据菜品id删除口味信息
+            dishFlavorService.deleteByDishId(dishId);
+            //删除菜品信息
+            dishMapper.deleteById(dishId);
+        }
+
+        return 1;
     }
 }

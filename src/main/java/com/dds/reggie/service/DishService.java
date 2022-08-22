@@ -23,12 +23,15 @@ public interface DishService {
     //根据菜品id查询菜品及其口味信息
     public DishDto getDishAndFlavorsById(Long id);
 
-    //修改菜品信息及其欧维信息
+    //修改菜品信息及其口味信息
     public void updateDishAndFlavors(DishDto dishDto);
 
     //根据菜品分类id查询所有菜品信息
     public List<Dish> getDishByCategoryId(Dish dish);
 
     //根据菜品id修改售卖状态
-    public Integer updateStatus(Integer statusCode,Long id);
+    public Integer updateStatus(Integer statusCode,List<Long> dishIds);
+
+    //根据菜品id删除菜品及其口味信息
+    public Integer deleteDishAndFlavorsById(List<Long> dishIds);
 }

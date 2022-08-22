@@ -2,12 +2,15 @@ package com.dds.reggie.service.Impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dds.reggie.config.BaseContext;
 import com.dds.reggie.entity.*;
 import com.dds.reggie.mapper.OrdersDetailMapper;
 import com.dds.reggie.mapper.OrdersMapper;
 import com.dds.reggie.mapper.ShoppingCartMapper;
 import com.dds.reggie.service.*;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,7 +76,7 @@ public class OrdersServiceImpl implements OrdersService {
 
         orders.setId(orderId);
         orders.setNumber(String.valueOf(orderId));//订单号直接由订单id转化为string
-        orders.setStatus(1);//设置为待付款
+        orders.setStatus(2);//设置为待派送
         orders.setUserId(userId);
         //由于没有开发支付功能，假设支付时间跟下单时间一样
         orders.setOrderTime(LocalDateTime.now());
@@ -93,5 +96,59 @@ public class OrdersServiceImpl implements OrdersService {
         //清空购物车数据
         shoppingCartService.clean();
         return 1;
+    }
+
+    @Override
+    public Page<Orders> page(int page, int pageSize, String number,String beginTime,String endTime) {
+
+        Page<Orders> pageInfo = new Page<>(page,pageSize);
+        QueryWrapper<Orders> qw = new QueryWrapper<>();
+        //添加过滤条件
+        qw.like(StringUtils.isNotEmpty(number),"number",number)
+          .gt(StringUtils.isNotEmpty(beginTime),"order_time",beginTime)
+          .lt(StringUtils.isNotEmpty(endTime),"order_time",endTime);
+
+        //添加排序条件
+        qw.orderByDesc("order_time");
+        ordersMapper.selectPage(pageInfo,qw);
+
+        return pageInfo;
+    }
+
+
+    @Override
+    public Page<OrdersDto> page(int page, int pageSize) {
+        Page<Orders> pageInfo = new Page<>(page,pageSize);
+        QueryWrapper<Orders> qw = new QueryWrapper<>();
+        //添加过滤条件(当前用户id)
+        qw.eq("user_id",BaseContext.get());
+        //添加排序条件
+        qw.orderByDesc("order_time");
+        ordersMapper.selectPage(pageInfo,qw);
+
+
+        Page<OrdersDto> resPageInfo = new Page<>(page,pageSize);
+        BeanUtils.copyProperties(pageInfo,resPageInfo,"records");
+
+        List<Orders> records = pageInfo.getRecords();
+        List<OrdersDto> resRecords = new ArrayList<>();
+        OrdersDto tmp = null;
+        for(Orders order:records){
+            tmp = new OrdersDto();
+            BeanUtils.copyProperties(order,tmp);
+            //根据订单号查询订单明细
+            tmp.setOrderDetails(ordersDetailService.getByOrderId(order.getId()));
+            resRecords.add(tmp);
+        }
+
+        resPageInfo.setRecords(resRecords);
+
+
+        return resPageInfo;
+    }
+
+    @Override
+    public void updateById(Orders orders) {
+        ordersMapper.updateById(orders);
     }
 }

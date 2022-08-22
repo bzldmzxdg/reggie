@@ -11,6 +11,7 @@ import com.dds.reggie.mapper.DishMapper;
 import com.dds.reggie.mapper.SetmealMapper;
 import com.dds.reggie.service.SetmealDishService;
 import com.dds.reggie.service.SetmealService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -58,6 +59,25 @@ public class SetmealServiceImpl implements SetmealService {
     }
 
     @Override
+    @Transactional
+    public void update(SetmealDto setmealDto) {
+        //修改套餐信息
+        setmealMapper.updateById(setmealDto);
+
+        Long id = setmealDto.getId();
+        List<SetmealDish> dishes = setmealDto.getSetmealDishes();
+        //根据套餐id删除旧的套餐内菜品信息
+        setmealDishService.deleteBySetmealId(id);
+        //插入新的菜品信息
+        for(SetmealDish dish : dishes){
+            dish.setSetmealId(id);
+            setmealDishService.save(dish);
+        }
+
+
+    }
+
+    @Override
     public void page(Page<Setmeal> pageInfo, QueryWrapper<Setmeal> qw) {
         setmealMapper.selectPage(pageInfo,qw);
     }
@@ -99,5 +119,29 @@ public class SetmealServiceImpl implements SetmealService {
         qw.eq("category_id",setmeal.getCategoryId());
         qw.eq("status",setmeal.getStatus());
         return setmealMapper.selectList(qw);
+    }
+
+    @Override
+    public void updateStatus(Integer codeStatus, List<Long> setmealIds) {
+        Setmeal setmeal = new Setmeal();
+        for(Long setmealId:setmealIds){
+            setmeal.setStatus(codeStatus);
+            setmeal.setId(setmealId);
+            setmealMapper.updateById(setmeal);
+        }
+    }
+
+    @Override
+    public SetmealDto getById(Long id) {
+        Setmeal setmeal = setmealMapper.selectById(id);
+        SetmealDto setmealDto = new SetmealDto();
+
+        BeanUtils.copyProperties(setmeal,setmealDto);
+
+        //根据套餐id查询套餐内菜品信息
+        List<SetmealDish> setmealDishs = setmealDishService.getBySetmealId(id);
+        setmealDto.setSetmealDishes(setmealDishs);
+        return setmealDto;
+
     }
 }
