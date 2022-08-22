@@ -63,4 +63,4 @@ mybatis-plus:
       id-type: ASSIGN_ID
 
 reggie:
-  path: /usr/local/img  #菜品图片路径(linux系统上的路径)
+  path: /usr/local/img/  #菜品图片路径(linux系统上的路径)
